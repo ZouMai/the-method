@@ -1,0 +1,9 @@
+:root{--zm-bg:#090b0f;--zm-paper:#f2eee4;--zm-ink:#090a0c;--zm-yellow:#f2d31c;--zm-red:#df3f35;--zm-blue:#239ee5;--zm-line:rgba(255,255,255,.16)}
+.zm-nav{position:relative;z-index:1000;min-height:62px;padding:11px 4vw;display:flex;align-items:center;justify-content:flex-end;gap:8px;background:rgba(7,8,10,.96);border-bottom:1px solid var(--zm-line);font-family:Arial,Helvetica,sans-serif}
+.zm-nav a{border:0;background:transparent;color:#d9d6ce;padding:9px 11px;font-size:.73rem;font-weight:900;letter-spacing:.1em;text-decoration:none;box-shadow:none;transition:.2s}
+.zm-nav a:hover,.zm-nav a:focus-visible,.zm-nav a.on{color:var(--zm-yellow);text-shadow:0 0 16px rgba(242,211,28,.7);outline:none}
+.zm-brand{margin-right:auto;display:flex;align-items:center;gap:10px;color:#fff!important;letter-spacing:.14em!important}
+.zm-stamp{display:grid;place-items:center;width:32px;height:32px;background:var(--zm-red);color:#fff;font-size:.9rem;box-shadow:3px 3px 0 #000;transform:rotate(-4deg)}
+.zm-collection{color:#fff;background:var(--zm-bg);font:900 .68rem/1.3 Arial,Helvetica,sans-serif;letter-spacing:.12em;text-align:center;text-transform:uppercase;padding:10px 16px}
+body{border-top:0!important}
+@media(max-width:720px){.zm-nav{justify-content:center;flex-wrap:wrap;gap:3px}.zm-brand{width:100%;justify-content:center;margin:0 0 3px}.zm-nav a{padding:7px;font-size:.64rem}}
