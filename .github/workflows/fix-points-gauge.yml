@@ -1,0 +1,62 @@
+name: Réparer la jauge de points
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fix-points-gauge.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Corriger les jauges des jeux
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          marker = "pointsGaugeRepairV1"
+          repair = r"""
+          <script id="pointsGaugeRepairV1">
+          (function(){
+            const legacy=document.getElementById('score');
+            if(!legacy || !window._ultimateAddPoints || !window._ultimateState)return;
+            let previous=Number((legacy.textContent.match(/d+/)||[0])[0]);
+            let missed=false;
+            const feedback=document.getElementById('feedback');
+            if(feedback){
+              new MutationObserver(()=>{
+                if(feedback.classList.contains('bad'))missed=true;
+              }).observe(feedback,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+            }
+            new MutationObserver(()=>{
+              const current=Number((legacy.textContent.match(/d+/)||[0])[0]);
+              const gained=current-previous;
+              if(gained>0){
+                window._ultimateAddPoints(gained*(missed?5:10));
+                missed=false;
+              }
+              previous=current;
+            }).observe(legacy,{subtree:true,childList:true,characterData:true});
+          })();
+          </script>
+          """
+          for name in ("back-to-school", "drinks"):
+              path=Path("lessons")/name/"index.html"
+              text=path.read_text(encoding="utf-8")
+              if marker not in text:
+                  text=text.replace("</body>",repair+"</body>",1)
+                  path.write_text(text,encoding="utf-8")
+          PY
+      - name: Publier
+        run: |
+          git config user.name "ZouMai automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add lessons/back-to-school/index.html lessons/drinks/index.html
+          git diff --cached --quiet || git commit -m "Réparer la jauge de points des jeux anglais"
+          git push
