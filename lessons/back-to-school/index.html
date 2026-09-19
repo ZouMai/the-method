@@ -4872,4 +4872,37 @@ const feedbackWolvesV139=["data:image/webp;base64,UklGRpBhAABXRUJQVlA4IIRhAACwBA
   }
 })();
 </script>
+
+<script id="pointsGaugeRepairV3">
+(function(){
+  if(window.pointsGaugeRepairV3)return;
+  window.pointsGaugeRepairV3=true;
+  let previous=0,points=0,missed=false,started=false;
+  function numberIn(el){
+    return Number(((el&&el.textContent||'').match(/d+/)||[0])[0]);
+  }
+  setInterval(()=>{
+    const score=document.getElementById('score');
+    const pointsEl=document.querySelector('#ultimateHUD .pts b');
+    const feedback=document.getElementById('feedback');
+    if(!score||!pointsEl)return;
+    const current=numberIn(score);
+    if(!started){
+      previous=current;
+      points=numberIn(pointsEl);
+      started=true;
+    }
+    if(feedback&&feedback.classList.contains('bad'))missed=true;
+    if(current<previous){
+      previous=current;
+      missed=false;
+    }else if(current>previous){
+      points+=(current-previous)*(missed?5:10);
+      pointsEl.textContent=points;
+      previous=current;
+      missed=false;
+    }
+  },120);
+})();
+</script>
 </body></html>
