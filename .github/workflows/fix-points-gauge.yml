@@ -15,34 +15,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Corriger les jauges des jeux
+      - name: Corriger les jauges après chargement
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          marker = "pointsGaugeRepairV1"
+          marker = "pointsGaugeRepairV2"
           repair = r"""
-          <script id="pointsGaugeRepairV1">
+          <script id="pointsGaugeRepairV2">
           (function(){
-            const legacy=document.getElementById('score');
-            if(!legacy || !window._ultimateAddPoints || !window._ultimateState)return;
-            let previous=Number((legacy.textContent.match(/d+/)||[0])[0]);
-            let missed=false;
-            const feedback=document.getElementById('feedback');
-            if(feedback){
-              new MutationObserver(()=>{
-                if(feedback.classList.contains('bad'))missed=true;
-              }).observe(feedback,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
-            }
-            new MutationObserver(()=>{
-              const current=Number((legacy.textContent.match(/d+/)||[0])[0]);
-              const gained=current-previous;
-              if(gained>0){
-                window._ultimateAddPoints(gained*(missed?5:10));
-                missed=false;
+            if(window.pointsGaugeRepairV2)return;
+            window.pointsGaugeRepairV2=true;
+            function init(){
+              const legacy=document.getElementById('score');
+              if(!legacy || !window._ultimateAddPoints || !window._ultimateState){
+                setTimeout(init,100);
+                return;
               }
-              previous=current;
-            }).observe(legacy,{subtree:true,childList:true,characterData:true});
+              let previous=Number((legacy.textContent.match(/d+/)||[0])[0]);
+              let missed=false;
+              const feedback=document.getElementById('feedback');
+              if(feedback){
+                new MutationObserver(()=>{
+                  if(feedback.classList.contains('bad'))missed=true;
+                }).observe(feedback,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+              }
+              new MutationObserver(()=>{
+                const current=Number((legacy.textContent.match(/d+/)||[0])[0]);
+                const gained=current-previous;
+                if(gained>0){
+                  window._ultimateAddPoints(gained*(missed?5:10));
+                  missed=false;
+                }
+                previous=current;
+              }).observe(legacy,{subtree:true,childList:true,characterData:true});
+            }
+            if(document.readyState==='loading'){
+              document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0),{once:true});
+            }else{
+              setTimeout(init,0);
+            }
           })();
           </script>
           """
@@ -58,5 +70,5 @@ jobs:
           git config user.name "ZouMai automation"
           git config user.email "actions@users.noreply.github.com"
           git add lessons/back-to-school/index.html lessons/drinks/index.html
-          git diff --cached --quiet || git commit -m "Réparer la jauge de points des jeux anglais"
+          git diff --cached --quiet || git commit -m "Initialiser correctement la jauge de points"
           git push
