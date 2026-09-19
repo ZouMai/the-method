@@ -4836,4 +4836,40 @@ const feedbackWolvesV139=["data:image/webp;base64,UklGRpBhAABXRUJQVlA4IIRhAACwBA
   }).observe(legacy,{subtree:true,childList:true,characterData:true});
 })();
 </script>
+
+<script id="pointsGaugeRepairV2">
+(function(){
+  if(window.pointsGaugeRepairV2)return;
+  window.pointsGaugeRepairV2=true;
+  function init(){
+    const legacy=document.getElementById('score');
+    if(!legacy || !window._ultimateAddPoints || !window._ultimateState){
+      setTimeout(init,100);
+      return;
+    }
+    let previous=Number((legacy.textContent.match(/d+/)||[0])[0]);
+    let missed=false;
+    const feedback=document.getElementById('feedback');
+    if(feedback){
+      new MutationObserver(()=>{
+        if(feedback.classList.contains('bad'))missed=true;
+      }).observe(feedback,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+    }
+    new MutationObserver(()=>{
+      const current=Number((legacy.textContent.match(/d+/)||[0])[0]);
+      const gained=current-previous;
+      if(gained>0){
+        window._ultimateAddPoints(gained*(missed?5:10));
+        missed=false;
+      }
+      previous=current;
+    }).observe(legacy,{subtree:true,childList:true,characterData:true});
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0),{once:true});
+  }else{
+    setTimeout(init,0);
+  }
+})();
+</script>
 </body></html>
