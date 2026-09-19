@@ -15,46 +15,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Corriger les jauges après chargement
+      - name: Synchroniser la jauge avec le score visible
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          marker = "pointsGaugeRepairV2"
+          marker = "pointsGaugeRepairV3"
           repair = r"""
-          <script id="pointsGaugeRepairV2">
+          <script id="pointsGaugeRepairV3">
           (function(){
-            if(window.pointsGaugeRepairV2)return;
-            window.pointsGaugeRepairV2=true;
-            function init(){
-              const legacy=document.getElementById('score');
-              if(!legacy || !window._ultimateAddPoints || !window._ultimateState){
-                setTimeout(init,100);
-                return;
-              }
-              let previous=Number((legacy.textContent.match(/d+/)||[0])[0]);
-              let missed=false;
+            if(window.pointsGaugeRepairV3)return;
+            window.pointsGaugeRepairV3=true;
+            let previous=0,points=0,missed=false,started=false;
+            function numberIn(el){
+              return Number(((el&&el.textContent||'').match(/d+/)||[0])[0]);
+            }
+            setInterval(()=>{
+              const score=document.getElementById('score');
+              const pointsEl=document.querySelector('#ultimateHUD .pts b');
               const feedback=document.getElementById('feedback');
-              if(feedback){
-                new MutationObserver(()=>{
-                  if(feedback.classList.contains('bad'))missed=true;
-                }).observe(feedback,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
-              }
-              new MutationObserver(()=>{
-                const current=Number((legacy.textContent.match(/d+/)||[0])[0]);
-                const gained=current-previous;
-                if(gained>0){
-                  window._ultimateAddPoints(gained*(missed?5:10));
-                  missed=false;
-                }
+              if(!score||!pointsEl)return;
+              const current=numberIn(score);
+              if(!started){
                 previous=current;
-              }).observe(legacy,{subtree:true,childList:true,characterData:true});
-            }
-            if(document.readyState==='loading'){
-              document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0),{once:true});
-            }else{
-              setTimeout(init,0);
-            }
+                points=numberIn(pointsEl);
+                started=true;
+              }
+              if(feedback&&feedback.classList.contains('bad'))missed=true;
+              if(current<previous){
+                previous=current;
+                missed=false;
+              }else if(current>previous){
+                points+=(current-previous)*(missed?5:10);
+                pointsEl.textContent=points;
+                previous=current;
+                missed=false;
+              }
+            },120);
           })();
           </script>
           """
@@ -70,5 +67,5 @@ jobs:
           git config user.name "ZouMai automation"
           git config user.email "actions@users.noreply.github.com"
           git add lessons/back-to-school/index.html lessons/drinks/index.html
-          git diff --cached --quiet || git commit -m "Initialiser correctement la jauge de points"
+          git diff --cached --quiet || git commit -m "Synchroniser la jauge avec le score visible"
           git push
